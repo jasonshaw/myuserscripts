@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name  批量打开本页全部链接
 // @namespace  snaplinks.jasonshaw
-// @version    0.1
+// @version    0.2
 // @description  批量打开本页全部链接,升级于tusi8的批量打开
 // @include      http://*.tusi8.com/*/*.html
 // @include      http://www.737cn.com/*/*.html
