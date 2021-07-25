@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name         聚bt秒传链接优化
 // @namespace    jason.shaw
-// @version      1.2.5
+// @version      1.2.6
 // @description  实现聚bt的115和百度网盘妙传链接，文件名的自动化处理（将完整的名字引入，将密码内嵌），以及关键信息的悬停复制
+// @note         1.2.6版本 优化增强：对多115秒链增加自动创建目录功能（先转存，再转移合并-》自动归入目录）
 // @note         1.2.5版本 修正网站中有些115秒链，没有换行，造成多行错误融合的情况,顺道修正了无密码的情况
 // @note         1.2.4版本 修正网站中没有秒链区块不存在或者innerText文本不存在，造成过度处理导致内容被过滤的问题
 // @note         1.2.3版本 对于jubt bbs，个别秒链并不在pre标签内，增加倒数第四个p的选择
@@ -107,16 +108,21 @@
             //115://英文写作训练.7z.002|5242880000|53E116CE8AD2A05741BDB7DC0B84856694AECF11|52CAB47B716A1C1328FA4577F9FA12CDB33F3A69
             //115://英文写作训练 .7z.004|676896723|F211E14EF361513BD0F39915C35F6B501B0032B5|0DE04BEEF9E8FBE32BDFB474B0902E9B60CA98
             //115://全球顶尖英文写作教材《write-source》Grade-1-12(解压密码：ixue.io).004|676896723|F211E14EF361513BD0F39915C35F6B501B0032B5|0DE04BEEF9E8FBE32BDFB474B0902E9B60CA9848
-            var re115 = /115:\/\/(.*?)(\.[^\|\n]+\|)/gm;
+            // 带目录的115秒传
+            // 115://0001.jpg|1301656|D67148312310A01D3FAC9F8F39578C22F2DAB338|B811A9C5FE668996E0C926EE85B011E3A3A2B44E|[AYW爱尤物] No.1875 爱你晴空
+            // 115://0002.jpg|1268560|894CAF6321356675A79CEFC09CAB3A800651A355|F5FB5B9B25D3C64BFA236AB3C340160BFFF0B746|[AYW爱尤物] No.1875 爱你晴空
+            // 115://0003.jpg|1314748|4F01310383BAF158CD5AC686136691EFC9B67471|5D030035FAF326A27EADC76C34EA0F5E27EF978A|[AYW爱尤物] No.1875 爱你晴空
+            var re115 = /115:\/\/(.*?)(\.[^\|\n]+\|)(\d+\|[0-9A-Z]+\|[0-9A-Z]+)(\|[^\|\n]+)?/gm;
             var reBd =/(.*#.*#.*#)([^\.\n]*)(\..*)?/gm;
             var arr = superLinks.match(re115);
             if(arr && arr.length > 0){
                 if(arr.length == 1){//仅有一个115秒传链接，则替换文件名为主标题+密码
-                    superLinks = superLinks.replace(re115,"115://"+mainTitle+"("+pw+")$2");
+                    superLinks = superLinks.replace(re115,"115://"+mainTitle+"("+pw+")$2$3");
                 }
-                else {//超过1个115秒传，则替换文件名为原文件名+密码
-                    superLinks = superLinks.replace(/(?<!\n)115:\/\//g,"\n115://").replace(/^\n/,'');//零宽负向先行断言
-                    superLinks = superLinks.replace(re115,"115://$1("+pw+")$2");
+                else {//超过1个115秒传，则替换文件名为原文件名,放在在“mainTitle+密码”目录里
+                    superLinks = superLinks.replace(/(?<!\n)115:\/\//g,"\n115://").replace(/^\n/,'');//零宽负向先行断言,去除头部无意义空行
+                    //superLinks = superLinks.replace(re115,"115://$1("+pw+")$2");  //测试连接：https://bbs.ijubt.gq/thread-3719.htm
+                    superLinks = superLinks.replace(re115,"115://$1$2$3|"+mainTitle+"("+pw+")");//在以“|”分割的第四节后增加第五节作为目录，让多个115妙传自动归入同一目录
                 }
             }
             arr = superLinks.match(reBd);
